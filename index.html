@@ -124,7 +124,8 @@
     .confirm-buttons button { margin: 4px; padding: 7px 12px; border: 2px solid #0ff; background: #000; color: #0ff; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; }
     .btn-delete { border-color: #f00; color: #f00; }
 
-    footer { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 2px solid #0ff; text-align: center; padding: 4px; font-size: 0.45rem; color: #0ff; z-index: 10; }
+    footer { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 2px solid #0ff; text-align: center; padding: 4px; font-size: 0.45rem; color: #0ff; z-index: 10; display: flex; justify-content: center; align-items: center; gap: 12px; }
+    #muteBtn { background: none; border: 2px solid #f0f; color: #f0f; font-size: 0.7rem; padding: 2px 8px; cursor: pointer; font-family: 'Orbitron', sans-serif; }
   </style>
 </head>
 <body>
@@ -133,7 +134,7 @@
   </div>
 
   <div id="home">
-    <div class="logo"><span class="nace">NACE</span><span class="hunter">HUNTER</span></div>
+    <div class="logo"><span class="nace">N/ACE</span><span class="hunter">HUNTER</span></div>
     <div class="subtitle">NON-ALCOHOLIC TRACKER</div>
     <button class="home-btn" onclick="enterApp('solid')">SOLID CHOICES</button>
     <button class="home-btn want" onclick="enterApp('want')">WANT TO TRY</button>
@@ -143,7 +144,7 @@
   <div id="app">
     <header>
       <button class="back-btn" onclick="goHome()">◀ HOME</button>
-      <div class="header-title"><span>N</span><span>A</span><span>s</span><span>e</span> <span>H</span><span>u</span><span>n</span><span>t</span><span>e</span><span>r</span></div>
+      <div class="header-title"><span>N</span><span>/</span><span>A</span><span>C</span><span>E</span> <span>H</span><span>U</span><span>N</span><span>T</span><span>E</span><span>R</span></div>
     </header>
     <div class="tabs">
       <div class="tab active" data-tab="solid">SOLID</div>
@@ -171,7 +172,12 @@
         <button class="btn-delete" id="confirmAction">DELETE</button>
       </div>
     </div>
-    <footer>NASE HUNTER • ROUND ROCK 78664 • NEON MODE</footer>
+    <footer>
+    <span>N/ACE HUNTER</span>
+    <button id="muteBtn">🔊</button>
+  </footer>
+
+  <audio id="bgMusic" src="stage5.mp3" loop autoplay></audio>
   </div>
 
   <script>
@@ -277,12 +283,22 @@
           const dx = currentX; const list = card.dataset.list; const idx = parseInt(card.dataset.idx);
           if (isDrag) {
             const touch = e.changedTouches[0];
-            const over = document.elementFromPoint(touch.clientX, touch.clientY);
-            const target = over && over.closest('.card');
-            if (target && target !== card && target.dataset.list === list) {
-              const tIdx = parseInt(target.dataset.idx);
+            const cards = Array.from(document.querySelectorAll(`.card[data-list="${list}"]`));
+            let targetIdx = idx;
+            for (const c of cards) {
+              const rect = c.getBoundingClientRect();
+              if (touch.clientY < rect.top + rect.height / 2) {
+                targetIdx = parseInt(c.dataset.idx);
+                break;
+              }
+            }
+            if (targetIdx !== idx) {
               const arr = list === 'solid' ? solid : list === 'want' ? want : notgreat;
-              const [moved] = arr.splice(idx, 1); arr.splice(tIdx, 0, moved); save();
+              const [moved] = arr.splice(idx, 1);
+              // Adjust index if we removed something before the target
+              const insertAt = targetIdx > idx ? targetIdx - 1 : targetIdx;
+              arr.splice(insertAt, 0, moved);
+              save();
             }
             card.style.transform = ''; card.classList.remove('dragging'); render(); return;
           }
@@ -353,6 +369,17 @@
       document.getElementById('confirmModal').classList.remove('open');
       render();
     };
+
+    const music = document.getElementById('bgMusic');
+    const muteBtn = document.getElementById('muteBtn');
+    if (music && muteBtn) {
+      music.volume = 0.6;
+      music.play().catch(() => {});
+      muteBtn.onclick = () => {
+        music.muted = !music.muted;
+        muteBtn.textContent = music.muted ? '🔇' : '🔊';
+      };
+    }
 
     const op = document.getElementById('opVideo');
     if (op) {
