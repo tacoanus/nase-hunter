@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#00ffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>NAse Hunter</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Press+Start+2P&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Orbitron', sans-serif; background: #050510; color: #0ff; overflow-x: hidden; padding-bottom: 36px; touch-action: pan-y; min-height: 100vh; }
+    body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.03) 2px, rgba(0,255,255,0.03) 4px); pointer-events: none; z-index: 1; }
+
+    #home { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; position: relative; z-index: 2; }
+    .logo {
+      font-family: 'Press Start 2P', cursive;
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+      line-height: 1;
+      text-shadow: 0 0 12px #0ff, 0 0 24px #0ff, 0 0 8px #f0f;
+    }
+    .logo .nace {
+      font-size: 3.6rem;
+      color: #0ff;
+      display: block;
+      letter-spacing: 6px;
+      text-shadow: 0 0 12px #0ff, 0 0 24px #0ff;
+    }
+    .logo .hunter {
+      font-size: 2.4rem;
+      color: #f0f;
+      display: block;
+      margin-top: 4px;
+      letter-spacing: 8px;
+      text-shadow: 0 0 12px #f0f, 0 0 24px #f0f;
+    }
+    .subtitle { font-size: 0.55rem; color: #f0f; letter-spacing: 2px; margin-bottom: 28px; text-shadow: 0 0 6px #f0f; }
+
+    .home-btn { width: 82%; max-width: 300px; margin: 10px 0; padding: 18px 8px; background: #000; border: 3px solid #0ff; color: #0ff; font-family: 'Orbitron', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; position: relative; box-shadow: 0 0 12px #0ff, inset 0 0 8px rgba(0,255,255,0.3); }
+    .home-btn.want { border-color: #f0f; color: #f0f; box-shadow: 0 0 10px #f0f, inset 0 0 6px rgba(255,0,255,0.3); }
+    .home-btn.notgreat { border-color: #ff0; color: #ff0; box-shadow: 0 0 10px #ff0, inset 0 0 6px rgba(255,255,0,0.3); }
+    .home-btn:active { transform: scale(0.97); }
+    .home-btn::before { content: '▶'; position: absolute; left: 8px; opacity: 0.7; }
+
+    #app { display: none; position: relative; z-index: 2; }
+    header {
+      background: #000;
+      padding: 8px 70px 4px 70px;
+      text-align: center;
+      border-bottom: 3px solid #0ff;
+      box-shadow: 0 0 12px #0ff;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-title {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.62rem;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .header-title span:nth-child(odd) { color: #0ff; text-shadow: 0 0 5px #0ff; }
+    .header-title span:nth-child(even) { color: #f0f; text-shadow: 0 0 5px #f0f; }
+    .back-btn {
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #000;
+      border: 2px solid #f0f;
+      color: #f0f;
+      font-size: 0.5rem;
+      padding: 3px 6px;
+      font-family: 'Orbitron', sans-serif;
+      z-index: 21;
+      line-height: 1;
+    }
+
+    .tabs { display: flex; background: #000; border-bottom: 2px solid #0ff; position: sticky; top: 42px; z-index: 15; }
+    .tab { flex: 1; padding: 6px 1px; text-align: center; font-size: 0.58rem; font-weight: 700; color: #555; border-bottom: 3px solid transparent; letter-spacing: 0.3px; }
+    .tab.active { color: #0ff; border-bottom-color: #0ff; text-shadow: 0 0 5px #0ff; }
+    #want.section ~ .tabs .tab.active, .tab[data-tab="want"].active { color: #f0f; border-bottom-color: #f0f; text-shadow: 0 0 5px #f0f; }
+
+    .section { display: none; padding: 4px; }
+    .section.active { display: block; }
+    #want.section { --accent: #f0f; }
+    #want .card { border-color: #f0f; box-shadow: 0 0 6px rgba(255,0,255,0.35); }
+    #want .card h3 { color: #f0f; }
+    #want .plus-btn { border-color: #f0f; color: #f0f; box-shadow: 0 0 8px #f0f; }
+
+    .card { display: flex; align-items: center; background: #0a0a15; border: 2px solid #0ff; margin-bottom: 6px; position: relative; box-shadow: 0 0 8px rgba(0,255,255,0.3); height: 86px; overflow: hidden; }
+    .card.starred { border-color: #ff0; box-shadow: 0 0 8px #ff0; }
+    .card.red { border-color: #f00; background: #200; }
+    .card.green { border-color: #0f0; background: #020; }
+    .card.dragging { opacity: 0.6; z-index: 50; }
+    .card img { width: 78px; height: 78px; object-fit: contain; background: #111; border-right: 1px solid currentColor; flex-shrink: 0; margin: 4px; }
+    .card-body { padding: 4px 8px; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+    .card h3 { font-size: 0.9rem; color: #0ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 3px; align-items: center; }
+    .star { color: #ff0; text-shadow: 0 0 4px #ff0; font-size: 0.75rem; }
+    .card .meta { font-size: 0.65rem; color: #aaa; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .buy-link { font-size: 0.65rem; color: #0ff; text-decoration: none; margin-top: 2px; display: inline-block; border: 1px solid currentColor; padding: 2px 6px; border-radius: 2px; }
+    #want .buy-link { color: #f0f; }
+
+    .plus-btn { border: 2px solid #f0f; color: #f0f; background: #000; padding: 8px; text-align: center; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; box-shadow: 0 0 8px #f0f; cursor: pointer; font-size: 0.7rem; }
+
+    .empty { text-align: center; color: #444; padding: 16px; font-size: 0.6rem; }
+
+    .modal, .confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 100; }
+    .modal.open { display: flex; align-items: flex-end; }
+    .confirm-modal.open { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: #000; border: 3px solid #0ff; width: 100%; padding: 12px; max-height: 60vh; overflow-y: auto; box-shadow: 0 0 15px #0ff; }
+    input[type="text"] { width: 100%; padding: 8px; background: #000; border: 2px solid #0ff; color: #0ff; font-family: 'Orbitron', sans-serif; margin-bottom: 6px; font-size: 0.8rem; }
+    .suggestion { padding: 8px; border-bottom: 1px solid #0ff; color: #0ff; font-size: 0.68rem; }
+    .suggestion small { color: #f0f; display: block; font-size: 0.5rem; }
+
+    .confirm-box { background: #000; border: 3px solid #f0f; padding: 14px; width: 75%; text-align: center; box-shadow: 0 0 15px #f0f; }
+    .confirm-buttons button { margin: 4px; padding: 7px 12px; border: 2px solid #0ff; background: #000; color: #0ff; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; }
+    .btn-delete { border-color: #f00; color: #f00; }
+
+    footer { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 2px solid #0ff; text-align: center; padding: 4px; font-size: 0.45rem; color: #0ff; z-index: 10; }
+  </style>
+</head>
+<body>
+  <div id="opening" style="position:fixed;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;">
+    <video id="opVideo" src="opening.mp4" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+  </div>
+
+  <div id="home">
+    <div class="logo"><span class="nace">NACE</span><span class="hunter">HUNTER</span></div>
+    <div class="subtitle">NON-ALCOHOLIC TRACKER</div>
+    <button class="home-btn" onclick="enterApp('solid')">SOLID CHOICES</button>
+    <button class="home-btn want" onclick="enterApp('want')">WANT TO TRY</button>
+    <button class="home-btn notgreat" onclick="enterApp('notgreat')">NOT SO GREAT</button>
+  </div>
+
+  <div id="app">
+    <header>
+      <button class="back-btn" onclick="goHome()">◀ HOME</button>
+      <div class="header-title"><span>N</span><span>A</span><span>s</span><span>e</span> <span>H</span><span>u</span><span>n</span><span>t</span><span>e</span><span>r</span></div>
+    </header>
+    <div class="tabs">
+      <div class="tab active" data-tab="solid">SOLID</div>
+      <div class="tab" data-tab="want">WANT</div>
+      <div class="tab" data-tab="notgreat">NOT GREAT</div>
+    </div>
+    <div id="solid" class="section active"></div>
+    <div id="want" class="section">
+      <div class="plus-btn" id="plusBtn">+ ADD DRINK</div>
+      <div id="wantList"></div>
+    </div>
+    <div id="notgreat" class="section"></div>
+
+    <div class="modal" id="addModal">
+      <div class="modal-content">
+        <h2 style="color:#0ff;margin-bottom:6px;font-size:0.8rem;">ADD TO WANT TO TRY</h2>
+        <input type="text" id="searchInput" placeholder="TYPE NAME...">
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+    </div>
+    <div class="confirm-modal" id="confirmModal">
+      <div class="confirm-box">
+        <p id="confirmText" style="color:#0ff;margin-bottom:12px;font-size:0.75rem;">CONFIRM?</p>
+        <button class="btn-cancel" id="cancelAction">CANCEL</button>
+        <button class="btn-delete" id="confirmAction">DELETE</button>
+      </div>
+    </div>
+    <footer>NASE HUNTER • ROUND ROCK 78664 • NEON MODE</footer>
+  </div>
+
+  <script>
+    const KNOWN = [
+      { name: "Athletic Run Wild IPA", meta: "Athletic · IPA · <0.5%", img: "https://images.heb.com/is/image/HEBGrocery/003981538-1", link: "https://www.heb.com/product-detail/athletic-brewing-co-non-alcoholic-run-wild-ipa-craft-beer-6-pk-cans/3981538" },
+      { name: "Athletic Free Wave Hazy IPA", meta: "Athletic · Hazy IPA · <0.5%", img: "https://images.heb.com/is/image/HEBGrocery/003981538-1", link: "https://www.heb.com/search?q=athletic+free+wave" },
+      { name: "Athletic Upside Dawn", meta: "Athletic · Golden Ale · <0.5%", img: "https://images.heb.com/is/image/HEBGrocery/003981538-1", link: "https://www.heb.com/search?q=athletic+upside+dawn" },
+      { name: "Guinness 0.0", meta: "Guinness · Stout · 0.0%", img: "https://inews.co.uk/wp-content/uploads/2020/11/0.0_single.jpg", link: "https://www.heb.com/search?q=guinness+0.0" },
+      { name: "Heineken 0.0", meta: "Heineken · Lager · 0.0%", img: "https://www.heineken.com/media/wysiwyg/heineken-0-0.png", link: "https://www.heb.com/search?q=heineken+0.0" },
+      { name: "Corona Non-Alcoholic", meta: "Corona · Lager · 0.0%", img: "https://www.corona.com/media/wysiwyg/corona-cero.png", link: "https://www.heb.com/search?q=corona+non+alcoholic" },
+      { name: "Best Day Kölsch", meta: "Best Day · Kölsch · <0.5%", img: "https://bestdaybrewing.com/cdn/shop/products/Kolsch_Can.png", link: "https://www.heb.com/search?q=best+day+kolsch" },
+      { name: "Best Day Hazy IPA", meta: "Best Day · Hazy IPA · <0.5%", img: "https://bestdaybrewing.com/cdn/shop/products/HazyIPA_Can.png", link: "https://www.heb.com/search?q=best+day+hazy" },
+      { name: "Deschutes Black Butte NA", meta: "Deschutes · Porter · <0.5%", img: "https://images.heb.com/is/image/HEBGrocery/003981538-1", link: "https://www.heb.com/search?q=deschutes+black+butte" },
+      { name: "Partake Pale", meta: "Partake · Pale Ale · <0.5%", img: "https://images.heb.com/is/image/HEBGrocery/003981538-1", link: "https://www.heb.com/search?q=partake+pale" },
+      { name: "Bero Edge Hill Hazy IPA", meta: "Bero · Hazy IPA · <0.5%", img: "https://images.heb.com/is/image/HEBGrocery/003981538-1", link: "https://www.heb.com/search?q=bero" },
+      { name: "Mountain Tonic Blood Orange & Bitters", meta: "Shacksbury · Mocktail · 0.0%", img: "https://images.heb.com/is/image/HEBGrocery/015695519-1", link: "https://www.heb.com/product-detail/mountain-tonic-blood-orange-bitters-non-alcoholic-cocktail-6-pk-cans/15695519" }
+    ];
+
+    let solid = JSON.parse(localStorage.getItem('solid') || '[]');
+    let want = JSON.parse(localStorage.getItem('want') || '[]');
+    let notgreat = JSON.parse(localStorage.getItem('notgreat') || '[]');
+
+    if (solid.length === 0 && want.length === 0 && notgreat.length === 0) {
+      solid.push({ name: "Mountain Tonic Blood Orange & Bitters", meta: "Shacksbury · Mocktail · 0.0%", img: "https://images.heb.com/is/image/HEBGrocery/015695519-1", link: "https://www.heb.com/product-detail/mountain-tonic-blood-orange-bitters-non-alcoholic-cocktail-6-pk-cans/15695519", starred: true });
+    }
+
+    function save() {
+      try {
+        localStorage.setItem('solid', JSON.stringify(solid));
+        localStorage.setItem('want', JSON.stringify(want));
+        localStorage.setItem('notgreat', JSON.stringify(notgreat));
+        // Force a re-read to confirm persistence
+        localStorage.getItem('solid');
+      } catch (e) {
+        console.warn('Save failed', e);
+      }
+    }
+
+    function enterApp(tab) {
+      document.getElementById('home').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      showTab(tab);
+    }
+    function goHome() {
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('home').style.display = 'flex';
+    }
+
+    function sortSolid() {
+      solid.sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
+    }
+
+    function render() {
+      sortSolid();
+      document.getElementById('solid').innerHTML = solid.length ? solid.map((item, i) => cardHTML(item, 'solid', i)).join('') : '<div class="empty">NO SOLID CHOICES</div>';
+      document.getElementById('wantList').innerHTML = want.length ? want.map((item, i) => cardHTML(item, 'want', i)).join('') : '<div class="empty">LIST EMPTY — ADD ONE</div>';
+      document.getElementById('notgreat').innerHTML = notgreat.length ? notgreat.map((item, i) => cardHTML(item, 'notgreat', i)).join('') : '<div class="empty">NOTHING HERE</div>';
+      attachHandlers();
+    }
+
+    function cardHTML(item, list, idx) {
+      const star = item.starred ? '<span class="star">★</span>' : '';
+      const imgSrc = item.img || 'https://via.placeholder.com/52x52?text=NA';
+      const link = item.link ? `<a class="buy-link" href="${item.link}" target="_blank">BUY</a>` : '';
+      return `
+        <div class="card ${item.starred ? 'starred' : ''}" data-list="${list}" data-idx="${idx}">
+          <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/52x52?text=NA'">
+          <div class="card-body">
+            <h3>${star}${item.name}</h3>
+            <div class="meta">${item.meta || ''}</div>
+            ${link}
+          </div>
+        </div>`;
+    }
+
+    function attachHandlers() {
+      document.querySelectorAll('.card').forEach(card => {
+        let startX = 0, startY = 0, currentX = 0, isDrag = false, longPressTimer = null;
+        card.addEventListener('touchstart', e => {
+          startX = e.touches[0].clientX; startY = e.touches[0].clientY; currentX = 0; isDrag = false;
+          longPressTimer = setTimeout(() => { isDrag = true; card.classList.add('dragging'); }, 480);
+        }, { passive: true });
+        card.addEventListener('touchmove', e => {
+          const dx = e.touches[0].clientX - startX; const dy = e.touches[0].clientY - startY;
+          if (isDrag) {
+            e.preventDefault();
+            card.style.transform = `translate(${dx}px, ${dy}px)`;
+            document.querySelectorAll('.card').forEach(c => c.style.outline = '');
+            const over = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+            if (over && over.closest('.card') && over.closest('.card') !== card) over.closest('.card').style.outline = '2px solid #ff0';
+          } else if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+            clearTimeout(longPressTimer);
+            if (Math.abs(dx) > Math.abs(dy)) {
+              currentX = dx;
+              card.style.transform = `translateX(${dx}px)`;
+              card.classList.toggle('red', dx < -50);
+              card.classList.toggle('green', dx > 50);
+            }
+          }
+        }, { passive: false });
+        card.addEventListener('touchend', e => {
+          clearTimeout(longPressTimer);
+          const dx = currentX; const list = card.dataset.list; const idx = parseInt(card.dataset.idx);
+          if (isDrag) {
+            const touch = e.changedTouches[0];
+            const over = document.elementFromPoint(touch.clientX, touch.clientY);
+            const target = over && over.closest('.card');
+            if (target && target !== card && target.dataset.list === list) {
+              const tIdx = parseInt(target.dataset.idx);
+              const arr = list === 'solid' ? solid : list === 'want' ? want : notgreat;
+              const [moved] = arr.splice(idx, 1); arr.splice(tIdx, 0, moved); save();
+            }
+            card.style.transform = ''; card.classList.remove('dragging'); render(); return;
+          }
+          card.style.transform = ''; card.classList.remove('red', 'green');
+          if (Math.abs(dx) > 80) {
+            if (list === 'want') {
+              if (dx > 80) { const item = want.splice(idx, 1)[0]; item.starred = false; solid.unshift(item); save(); render(); }
+              else if (dx < -80) { pending = { type: 'delete', list: 'want', idx }; document.getElementById('confirmText').textContent = 'DELETE THIS DRINK?'; document.getElementById('confirmModal').classList.add('open'); }
+            } else if (list === 'solid') {
+              if (dx > 80) { solid[idx].starred = true; const [item] = solid.splice(idx, 1); solid.unshift(item); save(); render(); }
+              else if (dx < -80) { const item = solid.splice(idx, 1)[0]; item.starred = false; notgreat.unshift(item); save(); render(); }
+            } else if (list === 'notgreat') {
+              if (dx > 80) { const item = notgreat.splice(idx, 1)[0]; item.starred = false; solid.push(item); save(); render(); }
+              else if (dx < -80) { pending = { type: 'delete', list: 'notgreat', idx }; document.getElementById('confirmText').textContent = 'DELETE THIS DRINK?'; document.getElementById('confirmModal').classList.add('open'); }
+            }
+          }
+        });
+      });
+    }
+
+    let pending = null;
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+      document.getElementById(tab).classList.add('active');
+    }
+    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+    let hStart = 0;
+    document.querySelector('header').addEventListener('touchstart', e => hStart = e.touches[0].clientX, { passive: true });
+    document.querySelector('header').addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - hStart;
+      if (Math.abs(dx) < 35) return;
+      const tabs = ['solid', 'want', 'notgreat'];
+      let i = tabs.indexOf(document.querySelector('.tab.active').dataset.tab);
+      i = dx < 0 ? (i + 1) % 3 : (i + 2) % 3;
+      showTab(tabs[i]);
+    });
+
+    document.getElementById('plusBtn').addEventListener('click', () => {
+      document.getElementById('addModal').classList.add('open');
+      document.getElementById('searchInput').value = '';
+      document.getElementById('suggestions').innerHTML = '';
+      document.getElementById('searchInput').focus();
+    });
+    document.getElementById('addModal').addEventListener('click', e => { if (e.target.id === 'addModal') e.target.classList.remove('open'); });
+    document.getElementById('searchInput').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase().trim();
+      const box = document.getElementById('suggestions');
+      if (!q) { box.innerHTML = ''; return; }
+      const matches = KNOWN.filter(d => d.name.toLowerCase().includes(q)).slice(0, 8);
+      box.innerHTML = matches.map(d => `<div class="suggestion" data-name="${d.name}" data-meta="${d.meta}" data-img="${d.img}" data-link="${d.link||''}">${d.name}<small>${d.meta}</small></div>`).join('') || '<div style="padding:8px;color:#666">NO MATCH</div>';
+      box.querySelectorAll('.suggestion').forEach(el => {
+        el.onclick = () => {
+          want.push({ name: el.dataset.name, meta: el.dataset.meta, img: el.dataset.img, link: el.dataset.link });
+          save(); render();
+          document.getElementById('addModal').classList.remove('open');
+        };
+      });
+    });
+    document.getElementById('cancelAction').onclick = () => { document.getElementById('confirmModal').classList.remove('open'); pending = null; render(); };
+    document.getElementById('confirmAction').onclick = () => {
+      if (pending && pending.type === 'delete') {
+        const arr = pending.list === 'want' ? want : notgreat;
+        arr.splice(pending.idx, 1); save();
+      }
+      pending = null;
+      document.getElementById('confirmModal').classList.remove('open');
+      render();
+    };
+
+    const op = document.getElementById('opVideo');
+    if (op) {
+      const hide = () => document.getElementById('opening').style.display = 'none';
+      op.onended = hide;
+      op.onerror = hide;
+      // Force play attempt; browsers often block autoplay until interaction
+      const tryPlay = () => op.play().catch(() => {
+        // If blocked, show a tap-to-start overlay or just hide after short delay
+        setTimeout(hide, 800);
+      });
+      tryPlay();
+      // Also allow tap on the opening screen to start/skip
+      document.getElementById('opening').addEventListener('click', () => {
+        op.play().then(hide).catch(hide);
+      });
+    }
+    render();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  </script>
+</body>
+</html>
