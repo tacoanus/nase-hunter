@@ -7,10 +7,10 @@
   "theme_color": "#00ffff",
   "icons": [
     {
-      "src": "https://images.heb.com/is/image/HEBGrocery/015695519-1",
-      "sizes": "192x192",
+      "src": "icon.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
